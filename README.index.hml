@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number Game</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for a better look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .card {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        /* Style for the custom message box */
+        #message-box {
+            min-height: 4.5rem; /* Ensure consistent height */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <!-- Game Container Card -->
+    <div class="card bg-white p-6 md:p-10 rounded-xl w-full max-w-sm border-t-4 border-indigo-600">
+        
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">সংখ্যা অনুমান করুন</h1>
+        <p class="text-sm text-gray-500 mb-6 text-center">১ থেকে ১০০-এর মধ্যে একটি সংখ্যা।</p>
+
+        <!-- Display Area for Messages and Attempts -->
+        <div id="message-box" class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-800 p-4 rounded-lg mb-6">
+            <p id="message" class="font-medium text-lg">গেমটি শুরু করতে প্রস্তুত!</p>
+            <p id="attempts-display" class="text-sm mt-1">চেষ্টা: ০</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="space-y-4">
+            <input type="number" id="guess-input" placeholder="আপনার অনুমান লিখুন..." min="1" max="100"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+                   autofocus>
+            
+            <button id="check-button" onclick="checkGuess()"
+                    class="btn-primary w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg text-xl shadow-md shadow-indigo-300">
+                চেক করুন
+            </button>
+            
+            <button id="reset-button" onclick="startGame()"
+                    class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg text-lg">
+                নতুন গেম শুরু করুন
+            </button>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // Global variables for the game
+        let secret_number;
+        let attempts;
+        const MIN_NUMBER = 1;
+        const MAX_NUMBER = 100;
+
+        // Get references to DOM elements
+        const messageEl = document.getElementById('message');
+        const attemptsEl = document.getElementById('attempts-display');
+        const inputEl = document.getElementById('guess-input');
+        const checkButton = document.getElementById('check-button');
+        const messageBoxEl = document.getElementById('message-box');
+
+        /**
+         * গেম শুরু করে, র্যান্ডম সংখ্যা তৈরি করে এবং ভেরিয়েবল রিসেট করে।
+         */
+        function startGame() {
+            // 1 থেকে 100 এর মধ্যে একটি র্যান্ডম পূর্ণসংখ্যা তৈরি করুন
+            secret_number = Math.floor(Math.random() * (MAX_NUMBER - MIN_NUMBER + 1)) + MIN_NUMBER;
+            attempts = 0;
+            
+            // UI রিসেট করুন
+            inputEl.value = '';
+            inputEl.disabled = false;
+            checkButton.disabled = false;
+            
+            // মেসেজ আপডেট করুন
+            updateMessage(`আমি ${MIN_NUMBER} থেকে ${MAX_NUMBER} এর মধ্যে একটি সংখ্যা ভাবছি।`, 'bg-indigo-100 border-indigo-500 text-indigo-800');
+            updateAttempts();
+            console.log("Secret Number (For Debugging):", secret_number); // Debugging এর জন্য
+        }
+
+        /**
+         * UI এ মেসেজ এবং স্টাইল আপডেট করে
+         * @param {string} text - প্রদর্শিত মেসেজ।
+         * @param {string} className - মেসেজ বক্সের জন্য Tailwind ক্লাস।
+         */
+        function updateMessage(text, className) {
+            messageEl.textContent = text;
+            messageBoxEl.className = `p-4 rounded-lg mb-6 border-l-4 ${className}`;
+        }
+
+        /**
+         * UI এ চেষ্টা সংখ্যা আপডেট করে
+         */
+        function updateAttempts() {
+            attemptsEl.textContent = `চেষ্টা: ${attempts}`;
+        }
+
+        /**
+         * ব্যবহারকারীর অনুমান পরীক্ষা করে এবং ফলাফল প্রদর্শন করে।
+         */
+        function checkGuess() {
+            const guess = parseInt(inputEl.value);
+
+            // ইনপুট ভ্যালিডেশন
+            if (isNaN(guess) || guess < MIN_NUMBER || guess > MAX_NUMBER) {
+                updateMessage(`দয়া করে ${MIN_NUMBER} এবং ${MAX_NUMBER}-এর মধ্যে একটি বৈধ সংখ্যা লিখুন।`, 'bg-red-100 border-red-500 text-red-800');
+                inputEl.value = ''; // ভুল ইনপুট মুছে ফেলা 
+                return;
+            }
+
+            attempts++;
+            updateAttempts();
+
+            if (guess < secret_number) {
+                updateMessage("⬇️ অনেক কম! একটি বড় সংখ্যা অনুমান করুন।", 'bg-yellow-100 border-yellow-500 text-yellow-800');
+            } else if (guess > secret_number) {
+                updateMessage("⬆️ অনেক বেশি! একটি ছোট সংখ্যা অনুমান করুন।", 'bg-yellow-100 border-yellow-500 text-yellow-800');
+            } else {
+                // সঠিক উত্তর
+                updateMessage(`🎉🎉🎉 অভিনন্দন! ${attempts} বার চেষ্টায় আপনি সঠিক সংখ্যাটি (${secret_number}) অনুমান করেছেন।`, 'bg-green-100 border-green-500 text-green-800');
+                
+                // গেম শেষ
+                inputEl.disabled = true;
+                checkButton.disabled = true;
+            }
+            
+            // সঠিক না হলে, ইনপুট বক্সটি পরিষ্কার করুন
+            if (guess !== secret_number) {
+                inputEl.value = '';
+            }
+            inputEl.focus(); // মোবাইল ব্যবহারকারীদের জন্য ইনপুট ফোকাস রাখুন
+        }
+
+        // এন্টার কী চাপলে অনুমান পরীক্ষা করার জন্য ইভেন্ট লিসেনার যোগ করুন
+        inputEl.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !checkButton.disabled) {
+                checkGuess();
+            }
+        });
+
+        // প্রথমবার গেম শুরু করুন
+        window.onload = startGame;
+    </script>
+</body>
+</html>
